@@ -39,11 +39,83 @@
  * References:
  * -------------------------------------------------------------------------- */
 
-#include "cholmod_extra.h"
-#include "cholmod_internal.h"
+// Start: no internal headers available.
+//#include "cholmod_internal.h"
+//#include <cholmod_cholesky.h>
 
 #include <cblas.h>
-#include <cholmod_cholesky.h>
+#ifdef OPENBLAS_USE64BITINT // openblas_config.h
+#  define BLAS64  // SuiteSparse_config.h: SUITESPARSE_BLAS_INT int64_t/int32_t
+#endif
+#include "cholmod_extra.h"
+
+
+// CHOLMOD_INT, CHOLMOD_LONG: cholmod.h
+// cholmod_types.h
+#undef Int
+#undef CHOLMOD
+#undef ITYPE
+#ifdef CHOLMOD_INT64
+#  define Int int64_t
+#  define CHOLMOD(name) cholmod_l_ ## name
+#  define ITYPE CHOLMOD_LONG
+#else
+#  define Int int32_t
+#  define CHOLMOD(name) cholmod_ ## name
+#  define ITYPE CHOLMOD_INT
+#endif
+
+// cholmod_internal.h
+#ifndef NDEBUG
+#  include <assert.h>
+#  define ASSERT(expression) (assert (expression))
+#else
+#  define ASSERT(expression)
+#endif
+#define FALSE 0
+#define ERROR(status,msg) \
+    CHOLMOD(error) (status, __FILE__, __LINE__, msg, Common)
+#define RETURN_IF_NULL(A,result)                            \
+{                                                           \
+    if ((A) == NULL)                                        \
+    {                                                       \
+        if (Common->status != CHOLMOD_OUT_OF_MEMORY)        \
+        {                                                   \
+            ERROR (CHOLMOD_INVALID, "argument missing") ;   \
+        }                                                   \
+        return (result) ;                                   \
+    }                                                       \
+}
+
+// Return if Common is NULL or invalid
+#define RETURN_IF_NULL_COMMON(result)                       \
+{                                                           \
+    if (Common == NULL)                                     \
+    {                                                       \
+        return (result) ;                                   \
+    }                                                       \
+    if (Common->itype != ITYPE)                             \
+    {                                                       \
+        Common->status = CHOLMOD_INVALID ;                  \
+        return (result) ;                                   \
+    }                                                       \
+}
+#define RETURN_IF_XTYPE_INVALID(A,xtype1,xtype2,result)                       \
+{                                                                             \
+    if ((A)->xtype < (xtype1) || (A)->xtype > (xtype2) ||                     \
+        ((A)->xtype != CHOLMOD_PATTERN && ((A)->x) == NULL) ||                \
+        ((A)->xtype == CHOLMOD_ZOMPLEX && ((A)->z) == NULL) ||                \
+        !(((A)->dtype == CHOLMOD_DOUBLE) || ((A)->dtype == CHOLMOD_SINGLE)))  \
+    {                                                                         \
+        if (Common->status != CHOLMOD_OUT_OF_MEMORY)                          \
+        {                                                                     \
+            ERROR (CHOLMOD_INVALID, "invalid xtype or dtype") ;               \
+        }                                                                     \
+        return (result) ;                                                     \
+    }                                                                         \
+}
+
+// End: no internal headers available.
 
 #define PERM(j) (Lperm != NULL ? Lperm[j] : j)
 
