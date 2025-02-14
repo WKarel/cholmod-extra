@@ -40,6 +40,7 @@
  * -------------------------------------------------------------------------- */
 
 // Start: no internal headers available.
+//#include "cholmod_extra.h"
 //#include "cholmod_internal.h"
 //#include <cholmod_cholesky.h>
 
@@ -47,19 +48,24 @@
 #ifdef OPENBLAS_USE64BITINT // openblas_config.h
 #  define BLAS64  // SuiteSparse_config.h: SUITESPARSE_BLAS_INT int64_t/int32_t
 #endif
-#include "cholmod_extra.h"
+#include <cholmod.h>
 
-
+// SuiteSparse distinguishes Int and SUITESPARSE_BLAS_INT
+// and copy-converts Int to SUITESPARSE_BLAS_INT
+// when calling BLAS functions through its macros.
+// But below, BLAS is called directly with arguments of type Int.
 // CHOLMOD_INT, CHOLMOD_LONG: cholmod.h
 // cholmod_types.h
 #undef Int
 #undef CHOLMOD
 #undef ITYPE
-#ifdef CHOLMOD_INT64
+#ifdef OPENBLAS_USE64BITINT
+// CHOLMOD_INT64
 #  define Int int64_t
 #  define CHOLMOD(name) cholmod_l_ ## name
 #  define ITYPE CHOLMOD_LONG
 #else
+// CHOLMOD_INT32
 #  define Int int32_t
 #  define CHOLMOD(name) cholmod_ ## name
 #  define ITYPE CHOLMOD_INT
