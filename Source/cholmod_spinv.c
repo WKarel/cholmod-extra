@@ -72,6 +72,11 @@
 #endif
 
 // cholmod_internal.h
+#undef ASSERT
+#undef FALSE
+#undef MAX
+#undef MIN
+#undef ERROR
 #ifndef NDEBUG
 #  include <assert.h>
 #  define ASSERT(expression) (assert (expression))
@@ -79,6 +84,8 @@
 #  define ASSERT(expression)
 #endif
 #define FALSE 0
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define ERROR(status,msg) \
     CHOLMOD(error) (status, __FILE__, __LINE__, msg, Common)
 #define RETURN_IF_NULL(A,result)                            \
